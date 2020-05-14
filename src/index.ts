@@ -4,13 +4,17 @@ import * as path from 'path';
 
 class App {
 
-    app = express.application;
+    public express: express.Application;
+
+    constructor() {
+        this.express = express();
+    }
 
     private loadConfig(): void {
         dotenv.config({ path : path.join(__dirname, '../.env') })
     }
 
-    public startApp(): any {
+    public start(): any {
         const port: number = 3000;
         this.loadConfig();
         //Locals.config().port;
