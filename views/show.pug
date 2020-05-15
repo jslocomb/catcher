@@ -1,6 +1,21 @@
 extends ./layout.pug
 
 block content
-    ul
-        each val in catchEvents
-            li=val.dateTs+val.data
+    table.table.is-striped
+        thead
+            tr
+                th Row
+                th Event
+                th Date
+        tbody                
+            each val,index in catchEvents
+                - var ev = val.data;
+                - var rowNum = index+1;
+                - console.log(ev);
+                tr
+                    td
+                        div=rowNum 
+                    <td>!{ev}</td>
+                    td
+                        div=val.dateTs  
+        tfoot

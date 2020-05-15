@@ -4,8 +4,9 @@ import path from 'path';
 import http from 'http';
 import favicon from 'serve-favicon';
 import bodyParser from 'body-parser';
-
 import memoryCache, { CacheClass } from 'memory-cache';
+import moment from 'moment';
+import prettyHtml from 'json-pretty-html';
 
 
 dotenv.config({ path : path.join(__dirname, '../.env') })
@@ -17,18 +18,12 @@ var events = new Array<CatchEvent>();
 
 //Locals.config().port;
 
-// Registering Exception / Error Handlers
-// this.express.use(ExceptionHandler.logErrors);
-// this.express.use(ExceptionHandler.clientErrorHandler);
-// this.express.use(ExceptionHandler.errorHandler);
-// this.express = ExceptionHandler.notFoundHandler(this.express);
-
 class CatchEvent {
-	public dateTs: Date;
+	public dateTs: string;
 	public data: string;
 
 	constructor(data: string) {
-		this.dateTs = new Date();
+		this.dateTs = moment().format();
 		this.data = data;
 	}
 }
@@ -37,13 +32,16 @@ app.set('view engine', 'pug');
 app.set('view options', { pretty: true });
 app.set('views', path.join(__dirname, '../views'));
 
+app.locals.pretty = true;
+
 app.use(bodyParser.json());
 
 app.post("/", function (req, res) {
 	
-	console.log(req.body);
-
-	var ce = new CatchEvent(JSON.stringify(req.body));
+	let prettyData: string = prettyHtml(req.body);
+	console.log(prettyData);
+	
+	var ce = new CatchEvent(prettyData);
 
 	events.push(ce);
 	
@@ -51,14 +49,15 @@ app.post("/", function (req, res) {
 	{
 		events.shift();
 	}
-	res.status(200).send(req.body);
+	res.status(200).send();
 });
 
 app.get("/show", function (req, res) {
-	res.render('show', { title: 'Hey', app: app, catchEvents : events })
+	res.render('show', { title: 'Show Events', app: app, catchEvents : events })
 });
 
 app.use(favicon(path.join(__dirname,'../assets','favicon.ico')));
+app.use(express.static(path.join(__dirname, '../assets')));
 
 // Start the server on the specified port
 app.listen(port, (_error: any) => {
