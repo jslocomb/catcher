@@ -1,101 +1,70 @@
-import * as express from 'express';
-import * as dotenv from 'dotenv';
-import * as path from 'path';
+import express from 'express';
+import dotenv from 'dotenv';
+import path from 'path';
+import http from 'http';
+import favicon from 'serve-favicon';
+import bodyParser from 'body-parser';
 
-class App {
+import memoryCache, { CacheClass } from 'memory-cache';
 
-    public express: express.Application;
 
-    constructor() {
-        this.express = express();
-    }
+dotenv.config({ path : path.join(__dirname, '../.env') })
 
-    private loadConfig(): void {
-        dotenv.config({ path : path.join(__dirname, '../.env') })
-    }
+const app: express.Application = express();
+const server: http.Server = http.createServer(app);
+const port: number = 3000;
+var events = new Array<CatchEvent>(); 
 
-    public start(): any {
-        const port: number = 3000;
-        this.loadConfig();
-        //Locals.config().port;
+//Locals.config().port;
 
-		// Registering Exception / Error Handlers
-		// this.express.use(ExceptionHandler.logErrors);
-		// this.express.use(ExceptionHandler.clientErrorHandler);
-		// this.express.use(ExceptionHandler.errorHandler);
-		// this.express = ExceptionHandler.notFoundHandler(this.express);
+// Registering Exception / Error Handlers
+// this.express.use(ExceptionHandler.logErrors);
+// this.express.use(ExceptionHandler.clientErrorHandler);
+// this.express.use(ExceptionHandler.errorHandler);
+// this.express = ExceptionHandler.notFoundHandler(this.express);
 
-		// Start the server on the specified port
-		this.app.listen(port, (_error: any) => {
-			if (_error) {
-				return console.log('Error: ', _error);
-			}
+class CatchEvent {
+	public dateTs: Date;
+	public data: string;
 
-			return console.log('\x1b[33m%s\x1b[0m', `Server :: Running @ 'http://localhost:${port}'`);
-		});
-
-    }
-
-}
-
-class Express {
-	/**
-	 * Create the express object
-	 */
-	public express: express.Application;
-
-	/**
-	 * Initializes the express server
-	 */
-	constructor () {
-		this.express = express();
-
-		this.mountDotEnv();
-		this.mountMiddlewares();
-		this.mountRoutes();
-	}
-
-	private mountDotEnv (): void {
-		//this.express = Locals.init(this.express);
-	}
-
-	/**
-	 * Mounts all the defined middlewares
-	 */
-	private mountMiddlewares (): void {
-		//this.express = Bootstrap.init(this.express);
-	}
-
-	/**
-	 * Mounts all the defined routes
-	 */
-	private mountRoutes (): void {
-		//this.express = Routes.mountWeb(this.express);
-		//this.express = Routes.mountApi(this.express);
-	}
-
-	/**
-	 * Starts the express server
-	 */
-	public init (): any {
-        const port: number = 3000;
-        //Locals.config().port;
-
-		// Registering Exception / Error Handlers
-		// this.express.use(ExceptionHandler.logErrors);
-		// this.express.use(ExceptionHandler.clientErrorHandler);
-		// this.express.use(ExceptionHandler.errorHandler);
-		// this.express = ExceptionHandler.notFoundHandler(this.express);
-
-		// Start the server on the specified port
-		this.express.listen(port, (_error: any) => {
-			if (_error) {
-				return console.log('Error: ', _error);
-			}
-
-			return console.log('\x1b[33m%s\x1b[0m', `Server :: Running @ 'http://localhost:${port}'`);
-		});
+	constructor(data: string) {
+		this.dateTs = new Date();
+		this.data = data;
 	}
 }
 
-export default new Express();
+app.set('view engine', 'pug');
+app.set('view options', { pretty: true });
+app.set('views', path.join(__dirname, '../views'));
+
+app.use(bodyParser.json());
+
+app.post("/", function (req, res) {
+	
+	console.log(req.body);
+
+	var ce = new CatchEvent(JSON.stringify(req.body));
+
+	events.push(ce);
+	
+	if (events.length > 100)
+	{
+		events.shift();
+	}
+	res.status(200).send(req.body);
+});
+
+app.get("/show", function (req, res) {
+	res.render('show', { title: 'Hey', app: app, catchEvents : events })
+});
+
+app.use(favicon(path.join(__dirname,'../assets','favicon.ico')));
+
+// Start the server on the specified port
+app.listen(port, (_error: any) => {
+	if (_error) {
+		return console.log("Error: ", _error);
+	}
+	console.log("\x1b[33m%s\x1b[0m", `Server :: Running @ http://localhost:${port}`);
+});
+

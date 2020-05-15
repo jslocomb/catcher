@@ -1,0 +1,6 @@
+extends ./layout.pug
+
+block content
+    ul
+        each val in catchEvents
+            li=val.dateTs+val.data
